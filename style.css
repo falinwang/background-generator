@@ -1,0 +1,63 @@
+body {
+  font: "Raleway", sans-serif;
+  color: rgba(0, 0, 0, 0.5);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5em;
+  top: 15%;
+  background: linear-gradient(to right, red, yellow); /* Standard syntax */
+}
+
+h1 {
+  font: 600 3.5em "Raleway", sans-serif;
+  color: rgba(0, 0, 0, 0.5);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  width: 80vw;
+  margin: auto;
+}
+
+h3 {
+  font: 900 1em "Raleway", sans-serif;
+  color: rgba(0, 0, 0, 0.5);
+  text-align: center;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  margin-bottom: 50px;
+}
+
+.picker {
+  width: 90px;
+  height: 70px;
+  border-radius: 10px;
+  border: none;
+  margin: 40px 10px;
+}
+
+#randombtn {
+  font: 600 1em "Raleway";
+  letter-spacing: 0.03em;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #e6e6e6;
+  padding: 12px 26px;
+  font-size: 1em;
+  border-radius: 10px;
+  margin: 20px 10px;
+  border: none;
+  position: relative;
+  cursor: pointer;
+  box-shadow: rgba(0, 0, 0, 0.8) 0px 5px 15px,
+    inset rgba(0, 0, 0, 0.15) 0px -10px 20px;
+}
+
+#randombtn:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+  box-shadow: 0 12px 16px 0 rgba(0, 0, 0, 0.24),
+    0 17px 50px 0 rgba(0, 0, 0, 0.19);
+}
+
+#randombtn:active {
+  top: 1px;
+  transition: all 0.3s linear;
+}
