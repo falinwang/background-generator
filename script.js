@@ -1,37 +1,120 @@
-var css = document.querySelector("h3");
-var color1 = document.querySelector(".color1");
-var color2 = document.querySelector(".color2");
-var body = document.getElementById("gradient");
-var button = document.getElementById("randombtn");
+/* ============================================================
+   Constants
+   ============================================================ */
+const PLATFORMS = {
+  linkedin:  { label: 'Banner · 1584 × 396 px',  w: 1584, h: 396,  ring: true  },
+  instagram: { label: 'Story · 1080 × 1920 px',  w: 1080, h: 1920, ring: true  },
+  twitter:   { label: 'Header · 1500 × 500 px',  w: 1500, h: 500,  ring: true  },
+  website:   { label: 'Hero · 1920 × 1080 px',   w: 1920, h: 1080, ring: false },
+};
 
-function setGradient() {
-  body.style.background =
-    "linear-gradient(to right, " + color1.value + ", " + color2.value + ")";
+const CSS_DIR = {
+  'right':        'to right',
+  'top-right':    'to top right',
+  'top':          'to top',
+  'top-left':     'to top left',
+  'left':         'to left',
+  'bottom-left':  'to bottom left',
+  'bottom':       'to bottom',
+  'bottom-right': 'to bottom right',
+};
 
-  css.textContent = body.style.background + ";";
-}
+const CANVAS_DIRS = {
+  'right':        [0,   0.5, 1,   0.5],
+  'top-right':    [0,   1,   1,   0  ],
+  'top':          [0.5, 1,   0.5, 0  ],
+  'top-left':     [1,   1,   0,   0  ],
+  'left':         [1,   0.5, 0,   0.5],
+  'bottom-left':  [1,   0,   0,   1  ],
+  'bottom':       [0.5, 0,   0.5, 1  ],
+  'bottom-right': [0,   0,   1,   1  ],
+};
 
-function setGradientWithParamCache() {
-  var ranColor1 = randomHexColor();
-  var ranColor2 = randomHexColor();
-  body.style.background =
-    "linear-gradient(to right, " + ranColor1 + ", " + ranColor2 + ")";
-  console.log(body.style.background);
-  color1.value = ranColor1;
-  color2.value = ranColor2;
-  css.textContent = body.style.background + ";";
-}
+/* ============================================================
+   State
+   ============================================================ */
+const state = {
+  stops:     ['#667eea', '#f093fb'],
+  direction: 'right',
+  type:      'linear',
+  grain:     0,
+  platform:  'linkedin',
+};
 
-// import from http://foreverz.cn/2016/09/29/js%E9%9A%8F%E6%9C%BA%E9%A2%9C%E8%89%B2/
-// Generate random 6-digit Hex color
-function randomHexColor() {
-  var hex = Math.floor(Math.random() * 16777216).toString(16);
-  while (hex.length < 6) {
-    hex = "0" + hex;
+/* ============================================================
+   DOM refs
+   ============================================================ */
+const preview       = document.getElementById('preview');
+const previewWrap   = document.getElementById('previewWrap');
+const previewNoise  = document.getElementById('previewNoise');
+const previewLabel  = document.getElementById('previewLabel');
+const ringPreview   = document.getElementById('ringPreview');
+const ringGradient  = document.getElementById('ringGradient');
+const platformTabs  = document.getElementById('platformTabs');
+const generateBtn   = document.getElementById('generateBtn');
+const exportBtn     = document.getElementById('exportBtn');
+
+/* ============================================================
+   Gradient helpers
+   ============================================================ */
+function buildCSSGradient() {
+  const stops = state.stops.join(', ');
+  if (state.type === 'linear') {
+    return `linear-gradient(${CSS_DIR[state.direction]}, ${stops})`;
   }
-  return "#" + hex;
+  if (state.type === 'radial') {
+    return `radial-gradient(circle at center, ${stops})`;
+  }
+  return `conic-gradient(from 0deg at center, ${stops})`;
 }
 
-color1.addEventListener("input", setGradient);
-color2.addEventListener("input", setGradient);
-button.addEventListener("click", setGradientWithParamCache);
+/* ============================================================
+   Preview renderer
+   ============================================================ */
+function renderPreview() {
+  const grad = buildCSSGradient();
+  preview.style.background = grad;
+  ringGradient.style.background = grad;
+
+  // Resize preview-wrap to fit the platform's aspect ratio
+  const { w, h, label, ring } = PLATFORMS[state.platform];
+  const maxW = previewWrap.parentElement.clientWidth - 32;
+  const maxH = previewWrap.parentElement.clientHeight
+             - previewLabel.offsetHeight
+             - (ring ? ringPreview.offsetHeight + 14 : 0)
+             - 60; // padding/gap
+
+  const scale = Math.min(maxW / w, Math.max(60, maxH) / h);
+  previewWrap.style.width  = `${Math.round(w * scale)}px`;
+  previewWrap.style.height = `${Math.round(h * scale)}px`;
+  preview.style.width  = '100%';
+  preview.style.height = '100%';
+
+  previewLabel.textContent = label;
+  ringPreview.style.display = ring ? 'flex' : 'none';
+
+  // Grain opacity
+  previewNoise.style.opacity = state.grain / 100 * 0.65;
+}
+
+/* ============================================================
+   Platform tab switching
+   ============================================================ */
+platformTabs.addEventListener('click', e => {
+  const tab = e.target.closest('.tab');
+  if (!tab) return;
+  platformTabs.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  state.platform = tab.dataset.platform;
+  renderPreview();
+});
+
+/* ============================================================
+   Init
+   ============================================================ */
+function init() {
+  renderPreview();
+}
+
+window.addEventListener('resize', renderPreview);
+init();
