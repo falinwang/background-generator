@@ -53,6 +53,10 @@ const ringGradient  = document.getElementById('ringGradient');
 const platformTabs  = document.getElementById('platformTabs');
 const generateBtn   = document.getElementById('generateBtn');
 const exportBtn     = document.getElementById('exportBtn');
+const drawer          = document.getElementById('drawer');
+const drawerBackdrop  = document.getElementById('drawerBackdrop');
+const customizeBtn    = document.getElementById('customizeBtn');
+const drawerClose     = document.getElementById('drawerClose');
 
 /* ============================================================
    Gradient helpers
@@ -136,6 +140,37 @@ platformTabs.addEventListener('click', e => {
   tab.classList.add('active');
   state.platform = tab.dataset.platform;
   renderPreview();
+});
+
+/* ============================================================
+   Drawer open / close
+   ============================================================ */
+function openDrawer() {
+  drawer.classList.add('open');
+  drawerBackdrop.classList.add('visible');
+  document.body.classList.add('drawer-open');
+  drawer.setAttribute('aria-hidden', 'false');
+  customizeBtn.setAttribute('aria-expanded', 'true');
+  drawerClose.focus();
+}
+
+function closeDrawer() {
+  drawer.classList.remove('open');
+  drawerBackdrop.classList.remove('visible');
+  document.body.classList.remove('drawer-open');
+  drawer.setAttribute('aria-hidden', 'true');
+  customizeBtn.setAttribute('aria-expanded', 'false');
+  customizeBtn.focus();
+  // Re-render preview after layout shift settles
+  setTimeout(renderPreview, 310);
+}
+
+customizeBtn.addEventListener('click', openDrawer);
+drawerClose.addEventListener('click', closeDrawer);
+drawerBackdrop.addEventListener('click', closeDrawer);
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && drawer.classList.contains('open')) closeDrawer();
 });
 
 /* ============================================================
