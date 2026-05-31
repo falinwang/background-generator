@@ -174,9 +174,77 @@ document.addEventListener('keydown', e => {
 });
 
 /* ============================================================
+   Color stop controls
+   ============================================================ */
+const colorStopsEl = document.getElementById('colorStops');
+const addStopBtn   = document.getElementById('addStop');
+
+function renderColorStops() {
+  colorStopsEl.innerHTML = '';
+  state.stops.forEach((color, i) => {
+    const well = document.createElement('div');
+    well.className = 'stop-well';
+
+    const input = document.createElement('input');
+    input.type  = 'color';
+    input.value = color;
+    input.setAttribute('aria-label', `Color stop ${i + 1}`);
+    input.addEventListener('input', () => {
+      state.stops[i] = input.value;
+      renderPreview();
+    });
+
+    well.appendChild(input);
+
+    if (state.stops.length > 2) {
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'stop-remove';
+      removeBtn.textContent = '×';
+      removeBtn.setAttribute('aria-label', `Remove color stop ${i + 1}`);
+      removeBtn.addEventListener('click', () => {
+        state.stops.splice(i, 1);
+        renderColorStops();
+        renderPreview();
+      });
+      well.appendChild(removeBtn);
+    }
+
+    colorStopsEl.appendChild(well);
+  });
+
+  addStopBtn.style.display = state.stops.length >= 4 ? 'none' : '';
+}
+
+addStopBtn.addEventListener('click', () => {
+  if (state.stops.length >= 4) return;
+  // Interpolate a new stop between the last two
+  const last = state.stops[state.stops.length - 1];
+  const prev = state.stops[state.stops.length - 2];
+  const mix = mixHex(prev, last, 0.5);
+  state.stops.push(mix);
+  renderColorStops();
+  renderPreview();
+});
+
+function mixHex(a, b, t) {
+  const parse = hex => [
+    parseInt(hex.slice(1,3), 16),
+    parseInt(hex.slice(3,5), 16),
+    parseInt(hex.slice(5,7), 16),
+  ];
+  const [ar,ag,ab] = parse(a);
+  const [br,bg,bb] = parse(b);
+  const r = Math.round(ar + (br-ar)*t).toString(16).padStart(2,'0');
+  const g = Math.round(ag + (bg-ag)*t).toString(16).padStart(2,'0');
+  const bv= Math.round(ab + (bb-ab)*t).toString(16).padStart(2,'0');
+  return `#${r}${g}${bv}`;
+}
+
+/* ============================================================
    Init
    ============================================================ */
 function init() {
+  renderColorStops();
   renderPreview();
 }
 
