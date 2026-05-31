@@ -69,6 +69,35 @@ function buildCSSGradient() {
 }
 
 /* ============================================================
+   Smart Random — HSL harmony
+   ============================================================ */
+function hslToHex(h, s, l) {
+  s /= 100; l /= 100;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => {
+    const k = (n + h / 30) % 12;
+    return Math.round(255 * (l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1)))
+      .toString(16).padStart(2, '0');
+  };
+  return `#${f(0)}${f(8)}${f(4)}`;
+}
+
+function smartRandom() {
+  const baseH = Math.random() * 360;
+  const s = 55 + Math.random() * 25;   // 55–80 %
+  const l = 48 + Math.random() * 20;   // 48–68 %
+  const useAnalogous = Math.random() > 0.5;
+
+  if (useAnalogous) {
+    const offset = 25 + Math.random() * 45;
+    return [hslToHex(baseH, s, l), hslToHex((baseH + offset) % 360, s, l)];
+  }
+  // split-complementary
+  const offset = 150 + Math.random() * 60;
+  return [hslToHex(baseH, s, l), hslToHex((baseH + offset) % 360, s, l)];
+}
+
+/* ============================================================
    Preview renderer
    ============================================================ */
 function renderPreview() {
@@ -115,6 +144,12 @@ platformTabs.addEventListener('click', e => {
 function init() {
   renderPreview();
 }
+
+generateBtn.addEventListener('click', () => {
+  state.stops = smartRandom();
+  renderPreview();
+  if (typeof renderColorStops === 'function') renderColorStops();
+});
 
 window.addEventListener('resize', renderPreview);
 init();
