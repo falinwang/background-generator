@@ -39,7 +39,8 @@ const state = {
   type:      'linear',
   grain:     0,
   platform:  'website',
-  glow:      { enabled: false, x: 20, y: 20, intensity: 70 },
+  glow:          { enabled: false, x: 20, y: 20, intensity: 70 },
+  meshPositions: [{ x: 25, y: 60 }, { x: 75, y: 35 }],
 };
 
 /* ============================================================
@@ -70,7 +71,64 @@ function buildCSSGradient() {
   if (state.type === 'radial') {
     return `radial-gradient(circle at center, ${stops})`;
   }
+  if (state.type === 'mesh') {
+    return buildMeshCSS();
+  }
   return `conic-gradient(from 0deg at center, ${stops})`;
+}
+
+function meshDarkBase() {
+  const n = state.stops.length;
+  const avgR = Math.round(state.stops.reduce((s, c) => s + parseInt(c.slice(1,3),16), 0) / n * 0.15);
+  const avgG = Math.round(state.stops.reduce((s, c) => s + parseInt(c.slice(3,5),16), 0) / n * 0.15);
+  const avgB = Math.round(state.stops.reduce((s, c) => s + parseInt(c.slice(5,7),16), 0) / n * 0.15);
+  return `rgb(${avgR},${avgG},${avgB})`;
+}
+
+function buildMeshCSS() {
+  const layers = state.stops.map((color, i) => {
+    const pos = state.meshPositions[i] || { x: 50, y: 50 };
+    return `radial-gradient(circle at ${pos.x}% ${pos.y}%, ${color} 0%, transparent 65%)`;
+  });
+  return [...layers, meshDarkBase()].join(', ');
+}
+
+function drawMeshCanvas(ctx, w, h) {
+  ctx.fillStyle = meshDarkBase();
+  ctx.fillRect(0, 0, w, h);
+  // Draw stops in reverse so stops[0] ends up on top (matches CSS layer order)
+  [...state.stops].reverse().forEach((color, ri) => {
+    const i = state.stops.length - 1 - ri;
+    const pos = state.meshPositions[i] || { x: 50, y: 50 };
+    const cx = w * pos.x / 100;
+    const cy = h * pos.y / 100;
+    const r = Math.max(w, h) * 0.65;
+    const pr = parseInt(color.slice(1,3), 16);
+    const pg = parseInt(color.slice(3,5), 16);
+    const pb = parseInt(color.slice(5,7), 16);
+    const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    grd.addColorStop(0, `rgba(${pr},${pg},${pb},1)`);
+    grd.addColorStop(1, `rgba(${pr},${pg},${pb},0)`); // avoid black-fade artifact
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, w, h);
+  });
+}
+
+function syncMeshPositions() {
+  while (state.meshPositions.length < state.stops.length) {
+    state.meshPositions.push({
+      x: Math.round(15 + Math.random() * 70),
+      y: Math.round(15 + Math.random() * 70),
+    });
+  }
+  state.meshPositions.length = state.stops.length;
+}
+
+function randomMeshPositions() {
+  state.meshPositions = Array.from({ length: state.stops.length }, () => ({
+    x: Math.round(15 + Math.random() * 70),
+    y: Math.round(15 + Math.random() * 70),
+  }));
 }
 
 function buildCSSBackground() {
@@ -212,6 +270,7 @@ function renderColorStops() {
       removeBtn.setAttribute('aria-label', `Remove color stop ${i + 1}`);
       removeBtn.addEventListener('click', () => {
         state.stops.splice(i, 1);
+        state.meshPositions.splice(i, 1);
         renderColorStops();
         renderPreview();
       });
@@ -231,6 +290,7 @@ addStopBtn.addEventListener('click', () => {
   const prev = state.stops[state.stops.length - 2];
   const mix = mixHex(prev, last, 0.5);
   state.stops.push(mix);
+  syncMeshPositions(); // add a random position for the new stop
   renderColorStops();
   renderPreview();
 });
@@ -437,8 +497,12 @@ async function renderAsset(w, h) {
   canvas.width = w; canvas.height = h;
   const ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = buildCanvasGradient(ctx, w, h);
-  ctx.fillRect(0, 0, w, h);
+  if (state.type === 'mesh') {
+    drawMeshCanvas(ctx, w, h);
+  } else {
+    ctx.fillStyle = buildCanvasGradient(ctx, w, h);
+    ctx.fillRect(0, 0, w, h);
+  }
 
   applyGlow(ctx, w, h);
   applyGrain(ctx, w, h, state.grain / 100);
@@ -450,11 +514,20 @@ async function renderProfileRing(size) {
   canvas.width = size; canvas.height = size;
   const ctx = canvas.getContext('2d');
 
-  // Fill gradient circle
-  ctx.fillStyle = buildCanvasGradient(ctx, size, size);
-  ctx.beginPath();
-  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-  ctx.fill();
+  if (state.type === 'mesh') {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    ctx.clip();
+    drawMeshCanvas(ctx, size, size);
+    ctx.restore();
+  } else {
+    // Fill gradient circle
+    ctx.fillStyle = buildCanvasGradient(ctx, size, size);
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   applyGlow(ctx, size, size);
   applyGrain(ctx, size, size, state.grain / 100);
@@ -563,6 +636,7 @@ function init() {
 
 generateBtn.addEventListener('click', () => {
   state.stops = smartRandom();
+  if (state.type === 'mesh') randomMeshPositions();
   renderPreview();
   if (typeof renderColorStops === 'function') renderColorStops();
 });
