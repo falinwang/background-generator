@@ -504,5 +504,9 @@ generateBtn.addEventListener('click', () => {
   if (typeof renderColorStops === 'function') renderColorStops();
 });
 
-window.addEventListener('resize', renderPreview);
+let _resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(renderPreview, 120);
+});
 init();
