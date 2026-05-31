@@ -38,7 +38,7 @@ const state = {
   direction: 'right',
   type:      'linear',
   grain:     0,
-  platform:  'linkedin',
+  platform:  'website',
   glow:      { enabled: false, x: 20, y: 20, intensity: 70 },
 };
 
