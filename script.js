@@ -332,6 +332,84 @@ grainSlider.addEventListener('input', () => {
 });
 
 /* ============================================================
+   Canvas rendering utilities
+   ============================================================ */
+function buildCanvasGradient(ctx, w, h) {
+  const stops = state.stops;
+  const n = stops.length;
+  let grad;
+
+  if (state.type === 'linear') {
+    const [x0r, y0r, x1r, y1r] = CANVAS_DIRS[state.direction];
+    grad = ctx.createLinearGradient(x0r * w, y0r * h, x1r * w, y1r * h);
+  } else if (state.type === 'radial') {
+    grad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) / 2);
+  } else {
+    grad = ctx.createConicGradient(0, w / 2, h / 2);
+  }
+
+  stops.forEach((color, i) => grad.addColorStop(i / (n - 1), color));
+  return grad;
+}
+
+function applyGrain(ctx, w, h, intensity) {
+  if (intensity === 0) return;
+  // Generate greyscale pixel noise
+  const imgData = ctx.createImageData(w, h);
+  const buf = imgData.data;
+  for (let i = 0; i < buf.length; i += 4) {
+    const v = Math.random() * 255 | 0;
+    buf[i] = buf[i + 1] = buf[i + 2] = v;
+    buf[i + 3] = 255;
+  }
+  const tmp = document.createElement('canvas');
+  tmp.width = w; tmp.height = h;
+  tmp.getContext('2d').putImageData(imgData, 0, 0);
+
+  ctx.save();
+  ctx.globalCompositeOperation = 'overlay';
+  ctx.globalAlpha = intensity * 0.45;   // 100% slider → 0.45 overlay opacity
+  ctx.drawImage(tmp, 0, 0);
+  ctx.restore();
+}
+
+async function renderAsset(w, h) {
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = buildCanvasGradient(ctx, w, h);
+  ctx.fillRect(0, 0, w, h);
+
+  applyGrain(ctx, w, h, state.grain / 100);
+  return canvas;
+}
+
+async function renderProfileRing(size) {
+  const canvas = document.createElement('canvas');
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  // Fill gradient circle
+  ctx.fillStyle = buildCanvasGradient(ctx, size, size);
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  applyGrain(ctx, size, size, state.grain / 100);
+
+  // Punch transparent inner hole (78 % of radius = realistic ring width)
+  ctx.globalCompositeOperation = 'destination-out';
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size * 0.39, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(0,0,0,1)';
+  ctx.fill();
+  ctx.globalCompositeOperation = 'source-over';
+
+  return canvas;
+}
+
+/* ============================================================
    Init
    ============================================================ */
 function init() {
