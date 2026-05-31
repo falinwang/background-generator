@@ -410,6 +410,87 @@ async function renderProfileRing(size) {
 }
 
 /* ============================================================
+   Text file generators
+   ============================================================ */
+function generateCSS() {
+  const grad = buildCSSGradient();
+  const vars = state.stops
+    .map((c, i) => `  --brand-color-${i + 1}: ${c};`)
+    .join('\n');
+  return `:root {\n${vars}\n  --brand-gradient: ${grad};\n}\n\n` +
+    `.brand-gradient { background: var(--brand-gradient); }\n` +
+    `.brand-hero     { background: var(--brand-gradient); min-height: 100vh; }\n`;
+}
+
+function generateBrandMd() {
+  const grad = buildCSSGradient();
+  const stopLines = state.stops.map((c, i) => `- Stop ${i + 1}: ${c}`).join('\n');
+  const cssVars = state.stops
+    .map((c, i) => `--brand-color-${i + 1}: ${c};`).join('\n') +
+    `\n--brand-gradient: ${grad};\n--brand-grain: ${state.grain}%;`;
+  const dirLabel = CSS_DIR[state.direction] || state.direction;
+  const grainNote = state.grain > 0
+    ? `\n- The grain texture (${state.grain}%) adds warmth and analogue depth` : '';
+
+  return `# My Brand Gradient\n\n` +
+    `## Palette\n${stopLines}\n- Direction: ${dirLabel}\n- Type: ${state.type}\n- Grain: ${state.grain}%\n\n` +
+    `## CSS\nbackground: ${grad};\n\n` +
+    `## CSS Variables\n${cssVars}\n\n` +
+    `## AI Prompt\nMy personal brand uses a ${state.type} gradient (${state.stops.join(' → ')}), ` +
+    `applied ${dirLabel}${state.grain > 0 ? ` with ${state.grain}% grain texture` : ''}.\n\n` +
+    `When generating visuals or copy for my brand:\n` +
+    `- Use these exact hex values for color consistency\n` +
+    `- Mood: modern, creative, tech-forward, distinctive${grainNote}\n` +
+    `- Avoid flat, neon, or high-saturation interpretations\n`;
+}
+
+/* ============================================================
+   Export
+   ============================================================ */
+const EXPORT_ASSETS = [
+  { folder: 'linkedin',  file: 'banner-1584x396.png',      w: 1584, h: 396,  ring: false },
+  { folder: 'linkedin',  file: 'profile-ring-800x800.png', w: 800,  h: 800,  ring: true  },
+  { folder: 'instagram', file: 'story-1080x1920.png',      w: 1080, h: 1920, ring: false },
+  { folder: 'instagram', file: 'post-1080x1080.png',       w: 1080, h: 1080, ring: false },
+  { folder: 'instagram', file: 'profile-ring-800x800.png', w: 800,  h: 800,  ring: true  },
+  { folder: 'twitter',   file: 'header-1500x500.png',      w: 1500, h: 500,  ring: false },
+  { folder: 'twitter',   file: 'profile-ring-400x400.png', w: 400,  h: 400,  ring: true  },
+  { folder: 'website',   file: 'hero-1920x1080.png',       w: 1920, h: 1080, ring: false },
+];
+
+async function canvasToBlob(canvas) {
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+
+async function exportKit() {
+  exportBtn.textContent = 'Building kit…';
+  exportBtn.classList.add('loading');
+
+  try {
+    const zip = new JSZip();
+
+    for (const asset of EXPORT_ASSETS) {
+      const canvas = asset.ring
+        ? await renderProfileRing(asset.w)
+        : await renderAsset(asset.w, asset.h);
+      const blob = await canvasToBlob(canvas);
+      zip.folder(asset.folder).file(asset.file, blob);
+    }
+
+    zip.folder('website').file('gradient.css', generateCSS());
+    zip.file('brand.md', generateBrandMd());
+
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    saveAs(zipBlob, 'my-brand-kit.zip');
+  } finally {
+    exportBtn.textContent = 'Export Brand Kit ↓';
+    exportBtn.classList.remove('loading');
+  }
+}
+
+exportBtn.addEventListener('click', exportKit);
+
+/* ============================================================
    Init
    ============================================================ */
 function init() {
