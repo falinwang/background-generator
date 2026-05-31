@@ -241,6 +241,81 @@ function mixHex(a, b, t) {
 }
 
 /* ============================================================
+   Direction grid
+   ============================================================ */
+const directionGrid = document.getElementById('directionGrid');
+
+directionGrid.addEventListener('click', e => {
+  const btn = e.target.closest('.dir-btn');
+  if (!btn) return;
+  directionGrid.querySelectorAll('.dir-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.direction = btn.dataset.dir;
+  renderPreview();
+});
+
+/* ============================================================
+   Type tabs
+   ============================================================ */
+const typeTabs = document.getElementById('typeTabs');
+
+typeTabs.addEventListener('click', e => {
+  const btn = e.target.closest('.type-btn');
+  if (!btn) return;
+  typeTabs.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.type = btn.dataset.type;
+  // Direction is only meaningful for linear gradients — grey out grid
+  directionGrid.style.opacity = state.type === 'linear' ? '1' : '0.35';
+  directionGrid.style.pointerEvents = state.type === 'linear' ? '' : 'none';
+  renderPreview();
+});
+
+/* ============================================================
+   Presets
+   ============================================================ */
+const PRESETS = [
+  { name: 'Aurora',   stops: ['#667eea', '#764ba2'],             dir: 'bottom-right' },
+  { name: 'Blush',    stops: ['#f093fb', '#f5576c'],             dir: 'right'        },
+  { name: 'Ocean',    stops: ['#4facfe', '#00f2fe'],             dir: 'bottom-right' },
+  { name: 'Mint',     stops: ['#43e97b', '#38f9d7'],             dir: 'right'        },
+  { name: 'Peach',    stops: ['#fa709a', '#fee140'],             dir: 'bottom-right' },
+  { name: 'Lavender', stops: ['#a18cd1', '#fbc2eb'],             dir: 'right'        },
+  { name: 'Sand',     stops: ['#ffecd2', '#fcb69f'],             dir: 'bottom'       },
+  { name: 'Slate',    stops: ['#2d3436', '#636e72'],             dir: 'right'        },
+  { name: 'Midnight', stops: ['#0f0c29', '#302b63', '#24243e'], dir: 'bottom-right' },
+  { name: 'Coral',    stops: ['#ff9a9e', '#fad0c4'],             dir: 'right'        },
+  { name: 'Forest',   stops: ['#134e5e', '#71b280'],             dir: 'bottom-right' },
+  { name: 'Gold',     stops: ['#f7971e', '#ffd200'],             dir: 'right'        },
+];
+
+const presetsGrid = document.getElementById('presetsGrid');
+
+PRESETS.forEach(preset => {
+  const btn = document.createElement('button');
+  btn.className = 'preset-swatch';
+  btn.style.background = `linear-gradient(to right, ${preset.stops.join(', ')})`;
+  btn.setAttribute('aria-label', `Preset: ${preset.name}`);
+  btn.addEventListener('click', () => {
+    state.stops     = [...preset.stops];
+    state.direction = preset.dir;
+    state.type      = 'linear';
+    // Sync UI
+    renderColorStops();
+    directionGrid.querySelectorAll('.dir-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.dir === preset.dir)
+    );
+    typeTabs.querySelectorAll('.type-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.type === 'linear')
+    );
+    directionGrid.style.opacity = '1';
+    directionGrid.style.pointerEvents = '';
+    renderPreview();
+  });
+  presetsGrid.appendChild(btn);
+});
+
+/* ============================================================
    Init
    ============================================================ */
 function init() {
