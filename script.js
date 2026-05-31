@@ -316,6 +316,22 @@ PRESETS.forEach(preset => {
 });
 
 /* ============================================================
+   Grain slider
+   ============================================================ */
+const grainSlider = document.getElementById('grainSlider');
+const grainValue  = document.getElementById('grainValue');
+
+grainSlider.addEventListener('input', () => {
+  state.grain = Number(grainSlider.value);
+  const pct = `${state.grain}%`;
+  grainValue.textContent = pct;
+  grainSlider.setAttribute('aria-valuetext', pct);
+  // Update the CSS custom property used by the slider track fill
+  grainSlider.style.setProperty('--fill', pct);
+  renderPreview();
+});
+
+/* ============================================================
    Init
    ============================================================ */
 function init() {
