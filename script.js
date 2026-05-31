@@ -94,7 +94,7 @@ function renderPreview() {
   ringPreview.style.display = ring ? 'flex' : 'none';
 
   // Grain opacity
-  previewNoise.style.opacity = state.grain / 100 * 0.65;
+  previewNoise.style.opacity = state.grain / 100 * 0.65; // 0.65 cap keeps grain subtle at max setting
 }
 
 /* ============================================================
