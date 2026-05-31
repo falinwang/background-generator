@@ -3,21 +3,113 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gradient Background</title>
-    <link rel="stylesheet" type="text/css" href="style.css" />
+    <title>Personal Brand Kit Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700&display=swap" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <link rel="stylesheet" href="style.css" />
   </head>
-  <body id="gradient">
-    <h1>COOL Gradient Background Generator</h1>
-    <input class="color1 picker" type="color" name="color1" value="#ff0000" />
-    <input
-      class="color2 picker"
-      type="color"
-      name="color2"
-      value="#FFFF00"
-    /><br />
-    <button id="randombtn">Random Generate</button>
-    <h2>Current CSS Background</h2>
-    <h3>linear-gradient(to right, rgb(255, 0, 0), rgb(255, 255, 0));</h3>
-    <script type="text/javascript" src="script.js"></script>
+  <body>
+
+    <!-- Customize drawer (hidden by default) -->
+    <aside class="drawer" id="drawer" role="dialog" aria-label="Customize gradient" aria-hidden="true">
+      <div class="drawer-header">
+        <span class="drawer-title">Customize</span>
+        <button class="drawer-close" id="drawerClose" aria-label="Close customize panel">✕</button>
+      </div>
+
+      <section class="control-group">
+        <div class="control-label">Brand Colors</div>
+        <div class="color-stops" id="colorStops"></div>
+        <button class="add-stop-btn" id="addStop">+ Add Stop</button>
+      </section>
+
+      <section class="control-group">
+        <div class="control-label">Direction</div>
+        <div class="direction-grid" id="directionGrid">
+          <button class="dir-btn" data-dir="top-left"    aria-label="To top left">↖</button>
+          <button class="dir-btn" data-dir="top"         aria-label="To top">↑</button>
+          <button class="dir-btn" data-dir="top-right"   aria-label="To top right">↗</button>
+          <button class="dir-btn" data-dir="left"        aria-label="To left">←</button>
+          <button class="dir-btn active" data-dir="right" aria-label="To right">→</button>
+          <button class="dir-btn" data-dir="bottom-left" aria-label="To bottom left">↙</button>
+          <button class="dir-btn" data-dir="bottom"      aria-label="To bottom">↓</button>
+          <button class="dir-btn" data-dir="bottom-right" aria-label="To bottom right">↘</button>
+        </div>
+      </section>
+
+      <section class="control-group">
+        <div class="control-label">Type</div>
+        <div class="type-tabs" id="typeTabs">
+          <button class="type-btn active" data-type="linear">Linear</button>
+          <button class="type-btn" data-type="radial">Radial</button>
+          <button class="type-btn" data-type="conic">Conic</button>
+        </div>
+      </section>
+
+      <section class="control-group">
+        <div class="control-label">
+          Grain
+          <span class="grain-value" id="grainValue">0%</span>
+        </div>
+        <div class="slider-well">
+          <input type="range" id="grainSlider" min="0" max="100" value="0"
+            aria-label="Grain intensity" aria-valuetext="0%" />
+        </div>
+      </section>
+
+      <section class="control-group">
+        <div class="control-label">Presets</div>
+        <div class="presets-grid" id="presetsGrid"></div>
+      </section>
+    </aside>
+
+    <!-- Backdrop (mobile/tablet only) -->
+    <div class="drawer-backdrop" id="drawerBackdrop" aria-hidden="true"></div>
+
+    <!-- Main studio -->
+    <main class="studio" id="studio">
+      <header class="studio-header">
+        <h1 class="studio-title">Brand Studio</h1>
+        <button class="customize-btn" id="customizeBtn" aria-expanded="false"
+          aria-controls="drawer">✎ Customize</button>
+      </header>
+
+      <nav class="platform-tabs" id="platformTabs" aria-label="Platform preview">
+        <button class="tab active" data-platform="linkedin">LinkedIn</button>
+        <button class="tab" data-platform="instagram">Instagram</button>
+        <button class="tab" data-platform="twitter">X / Twitter</button>
+        <button class="tab" data-platform="website">Website</button>
+      </nav>
+
+      <div class="preview-well">
+        <div class="preview-label" id="previewLabel">Banner · 1584 × 396 px</div>
+        <div class="preview-wrap" id="previewWrap">
+          <div class="preview-gradient" id="preview"></div>
+          <svg class="preview-noise" id="previewNoise" aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+            <filter id="grain-filter">
+              <feTurbulence type="fractalNoise" baseFrequency="0.75"
+                numOctaves="4" stitchTiles="stitch"/>
+              <feColorMatrix type="saturate" values="0"/>
+            </filter>
+            <rect width="100%" height="100%" filter="url(#grain-filter)"/>
+          </svg>
+        </div>
+        <div class="ring-preview" id="ringPreview" aria-hidden="true">
+          <div class="ring-gradient" id="ringGradient"></div>
+          <div class="ring-inner"></div>
+        </div>
+      </div>
+
+      <div class="action-bar">
+        <button class="generate-btn" id="generateBtn">✦ Generate New Gradient</button>
+        <button class="export-btn" id="exportBtn">Export Brand Kit ↓</button>
+      </div>
+    </main>
+
+    <script src="script.js"></script>
   </body>
 </html>
