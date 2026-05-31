@@ -61,6 +61,37 @@
       </section>
 
       <section class="control-group">
+        <div class="control-label">
+          Glow
+          <label class="glow-toggle" aria-label="Enable glow effect">
+            <input type="checkbox" id="glowToggle" />
+            <span class="glow-toggle-track"></span>
+          </label>
+        </div>
+        <div class="glow-controls" id="glowControls">
+          <div class="glow-grid" id="glowGrid">
+            <button class="glow-btn active" data-gx="20" data-gy="20" aria-label="Glow top left">↖</button>
+            <button class="glow-btn" data-gx="50" data-gy="20" aria-label="Glow top center">↑</button>
+            <button class="glow-btn" data-gx="80" data-gy="20" aria-label="Glow top right">↗</button>
+            <button class="glow-btn" data-gx="20" data-gy="50" aria-label="Glow center left">←</button>
+            <button class="glow-btn" data-gx="50" data-gy="50" aria-label="Glow center">●</button>
+            <button class="glow-btn" data-gx="80" data-gy="50" aria-label="Glow center right">→</button>
+            <button class="glow-btn" data-gx="20" data-gy="80" aria-label="Glow bottom left">↙</button>
+            <button class="glow-btn" data-gx="50" data-gy="80" aria-label="Glow bottom center">↓</button>
+            <button class="glow-btn" data-gx="80" data-gy="80" aria-label="Glow bottom right">↘</button>
+          </div>
+          <div class="control-label" style="margin-top:4px">
+            Intensity
+            <span class="grain-value" id="glowValue">70%</span>
+          </div>
+          <div class="slider-well">
+            <input type="range" id="glowIntensity" min="10" max="100" value="70"
+              aria-label="Glow intensity" aria-valuetext="70%" />
+          </div>
+        </div>
+      </section>
+
+      <section class="control-group">
         <div class="control-label">Presets</div>
         <div class="presets-grid" id="presetsGrid"></div>
       </section>

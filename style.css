@@ -581,6 +581,94 @@ body.drawer-open .studio {
 }
 
 /* ============================================================
+   Glow toggle
+   ============================================================ */
+.glow-toggle {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.glow-toggle input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.glow-toggle-track {
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
+  background: #c8cdd6;
+  position: relative;
+  box-shadow: var(--shadow-inset-sm);
+  transition: background var(--dur) var(--ease);
+  flex-shrink: 0;
+}
+
+.glow-toggle-track::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  top: 2px;
+  left: 2px;
+  transition: transform var(--dur) var(--ease);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.glow-toggle input:checked + .glow-toggle-track { background: var(--accent); }
+.glow-toggle input:checked + .glow-toggle-track::after { transform: translateX(14px); }
+.glow-toggle input:focus-visible + .glow-toggle-track { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Glow controls panel */
+.glow-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  opacity: 0.35;
+  pointer-events: none;
+  transition: opacity var(--dur) var(--ease);
+}
+
+.glow-controls.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Glow position grid */
+.glow-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+}
+
+.glow-btn {
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  box-shadow: var(--shadow-raised);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  transition: box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease),
+              background var(--dur) var(--ease), color var(--dur) var(--ease);
+  min-height: 44px;
+}
+
+.glow-btn:hover  { box-shadow: var(--shadow-raised-hover); transform: translateY(-1px); }
+.glow-btn:active { box-shadow: var(--shadow-inset-sm); transform: translateY(0.5px); }
+
+.glow-btn.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(108,99,255,0.4);
+}
+
+/* ============================================================
    Responsive — Tablet (600–899px)
    ============================================================ */
 @media (max-width: 899px) {

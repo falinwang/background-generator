@@ -39,6 +39,7 @@ const state = {
   type:      'linear',
   grain:     0,
   platform:  'linkedin',
+  glow:      { enabled: false, x: 20, y: 20, intensity: 70 },
 };
 
 /* ============================================================
@@ -70,6 +71,14 @@ function buildCSSGradient() {
     return `radial-gradient(circle at center, ${stops})`;
   }
   return `conic-gradient(from 0deg at center, ${stops})`;
+}
+
+function buildCSSBackground() {
+  const base = buildCSSGradient();
+  if (!state.glow.enabled) return base;
+  const { x, y, intensity } = state.glow;
+  const alpha = (intensity / 100 * 0.85).toFixed(2);
+  return `radial-gradient(circle at ${x}% ${y}%, rgba(255,255,255,${alpha}) 0%, transparent 55%), ${base}`;
 }
 
 /* ============================================================
@@ -105,7 +114,7 @@ function smartRandom() {
    Preview renderer
    ============================================================ */
 function renderPreview() {
-  const grad = buildCSSGradient();
+  const grad = buildCSSBackground();
   preview.style.background = grad;
   ringGradient.style.background = grad;
 
@@ -332,6 +341,42 @@ grainSlider.addEventListener('input', () => {
 });
 
 /* ============================================================
+   Glow controls
+   ============================================================ */
+const glowToggle      = document.getElementById('glowToggle');
+const glowControls    = document.getElementById('glowControls');
+const glowGrid        = document.getElementById('glowGrid');
+const glowIntensityEl = document.getElementById('glowIntensity');
+const glowValueEl     = document.getElementById('glowValue');
+
+glowToggle.addEventListener('change', () => {
+  state.glow.enabled = glowToggle.checked;
+  glowControls.classList.toggle('active', glowToggle.checked);
+  renderPreview();
+});
+
+glowGrid.addEventListener('click', e => {
+  const btn = e.target.closest('.glow-btn');
+  if (!btn) return;
+  glowGrid.querySelectorAll('.glow-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.glow.x = Number(btn.dataset.gx);
+  state.glow.y = Number(btn.dataset.gy);
+  renderPreview();
+});
+
+glowIntensityEl.addEventListener('input', () => {
+  state.glow.intensity = Number(glowIntensityEl.value);
+  const pct = `${state.glow.intensity}%`;
+  glowValueEl.textContent = pct;
+  glowIntensityEl.style.setProperty('--fill', pct);
+  renderPreview();
+});
+
+// Init slider fill
+glowIntensityEl.style.setProperty('--fill', '70%');
+
+/* ============================================================
    Canvas rendering utilities
    ============================================================ */
 function buildCanvasGradient(ctx, w, h) {
@@ -350,6 +395,20 @@ function buildCanvasGradient(ctx, w, h) {
 
   stops.forEach((color, i) => grad.addColorStop(i / (n - 1), color));
   return grad;
+}
+
+function applyGlow(ctx, w, h) {
+  if (!state.glow.enabled) return;
+  const { x, y, intensity } = state.glow;
+  const cx = w * x / 100;
+  const cy = h * y / 100;
+  const r = Math.max(w, h) * 0.6;
+  const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+  const alpha = (intensity / 100 * 0.85).toFixed(2);
+  grd.addColorStop(0, `rgba(255,255,255,${alpha})`);
+  grd.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, w, h);
 }
 
 function applyGrain(ctx, w, h, intensity) {
@@ -381,6 +440,7 @@ async function renderAsset(w, h) {
   ctx.fillStyle = buildCanvasGradient(ctx, w, h);
   ctx.fillRect(0, 0, w, h);
 
+  applyGlow(ctx, w, h);
   applyGrain(ctx, w, h, state.grain / 100);
   return canvas;
 }
@@ -396,6 +456,7 @@ async function renderProfileRing(size) {
   ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
   ctx.fill();
 
+  applyGlow(ctx, size, size);
   applyGrain(ctx, size, size, state.grain / 100);
 
   // Punch transparent inner hole (78 % of radius = realistic ring width)
@@ -413,7 +474,7 @@ async function renderProfileRing(size) {
    Text file generators
    ============================================================ */
 function generateCSS() {
-  const grad = buildCSSGradient();
+  const grad = buildCSSBackground(); // includes glow layer if enabled
   const vars = state.stops
     .map((c, i) => `  --brand-color-${i + 1}: ${c};`)
     .join('\n');
@@ -431,6 +492,8 @@ function generateBrandMd() {
   const dirLabel = CSS_DIR[state.direction] || state.direction;
   const grainNote = state.grain > 0
     ? `\n- The grain texture (${state.grain}%) adds warmth and analogue depth` : '';
+  const glowNote = state.glow.enabled
+    ? `\n- A white glow point (${state.glow.intensity}% intensity) at position ${state.glow.x}% ${state.glow.y}%` : '';
 
   return `# My Brand Gradient\n\n` +
     `## Palette\n${stopLines}\n- Direction: ${dirLabel}\n- Type: ${state.type}\n- Grain: ${state.grain}%\n\n` +
@@ -440,7 +503,7 @@ function generateBrandMd() {
     `applied ${dirLabel}${state.grain > 0 ? ` with ${state.grain}% grain texture` : ''}.\n\n` +
     `When generating visuals or copy for my brand:\n` +
     `- Use these exact hex values for color consistency\n` +
-    `- Mood: modern, creative, tech-forward, distinctive${grainNote}\n` +
+    `- Mood: modern, creative, tech-forward, distinctive${grainNote}${glowNote}\n` +
     `- Avoid flat, neon, or high-saturation interpretations\n`;
 }
 
