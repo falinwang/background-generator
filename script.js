@@ -41,6 +41,7 @@ const state = {
   platform:  'website',
   glow:          { enabled: false, x: 20, y: 20, intensity: 70 },
   meshPositions: [{ x: 25, y: 60 }, { x: 75, y: 35 }],
+  meshChaos:     50,
 };
 
 /* ============================================================
@@ -65,16 +66,8 @@ const drawerClose     = document.getElementById('drawerClose');
    ============================================================ */
 function buildCSSGradient() {
   const stops = state.stops.join(', ');
-  if (state.type === 'linear') {
-    return `linear-gradient(${CSS_DIR[state.direction]}, ${stops})`;
-  }
-  if (state.type === 'radial') {
-    return `radial-gradient(circle at center, ${stops})`;
-  }
-  if (state.type === 'mesh') {
-    return buildMeshCSS();
-  }
-  return `conic-gradient(from 0deg at center, ${stops})`;
+  if (state.type === 'mesh') return buildMeshCSS();
+  return `linear-gradient(${CSS_DIR[state.direction]}, ${stops})`;
 }
 
 function meshDarkBase() {
@@ -86,9 +79,11 @@ function meshDarkBase() {
 }
 
 function buildMeshCSS() {
+  // chaos 0 → blobs cover 80% (smooth), chaos 100 → 35% (patchy)
+  const spread = Math.round(80 - (state.meshChaos / 100) * 45);
   const layers = state.stops.map((color, i) => {
     const pos = state.meshPositions[i] || { x: 50, y: 50 };
-    return `radial-gradient(circle at ${pos.x}% ${pos.y}%, ${color} 0%, transparent 65%)`;
+    return `radial-gradient(circle at ${pos.x}% ${pos.y}%, ${color} 0%, transparent ${spread}%)`;
   });
   return [...layers, meshDarkBase()].join(', ');
 }
@@ -96,21 +91,36 @@ function buildMeshCSS() {
 function drawMeshCanvas(ctx, w, h) {
   ctx.fillStyle = meshDarkBase();
   ctx.fillRect(0, 0, w, h);
+  // chaos 0 → large blobs (0.75×), chaos 100 → small blobs (0.35×)
+  const blobR = Math.max(w, h) * (0.75 - (state.meshChaos / 100) * 0.4);
   // Draw stops in reverse so stops[0] ends up on top (matches CSS layer order)
   [...state.stops].reverse().forEach((color, ri) => {
     const i = state.stops.length - 1 - ri;
     const pos = state.meshPositions[i] || { x: 50, y: 50 };
     const cx = w * pos.x / 100;
     const cy = h * pos.y / 100;
-    const r = Math.max(w, h) * 0.65;
     const pr = parseInt(color.slice(1,3), 16);
     const pg = parseInt(color.slice(3,5), 16);
     const pb = parseInt(color.slice(5,7), 16);
-    const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+    const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, blobR);
     grd.addColorStop(0, `rgba(${pr},${pg},${pb},1)`);
     grd.addColorStop(1, `rgba(${pr},${pg},${pb},0)`); // avoid black-fade artifact
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, w, h);
+  });
+}
+
+function smartRandomMesh() {
+  const count = Math.random() > 0.5 ? 5 : 4;
+  const baseH  = Math.random() * 360;
+  const s      = 60 + Math.random() * 20;          // 60–80 %
+  const l      = 45 + Math.random() * 15;          // 45–60 %
+  const spread = 120 + Math.random() * 120;        // 120–240° hue spread
+  return Array.from({ length: count }, (_, i) => {
+    const hue = (baseH + (spread / (count - 1)) * i) % 360;
+    const sV  = Math.max(45, Math.min(90, s + (Math.random() - 0.5) * 15));
+    const lV  = Math.max(35, Math.min(70, l + (Math.random() - 0.5) * 15));
+    return hslToHex(hue, sV, lV);
   });
 }
 
@@ -326,7 +336,8 @@ directionGrid.addEventListener('click', e => {
 /* ============================================================
    Type tabs
    ============================================================ */
-const typeTabs = document.getElementById('typeTabs');
+const typeTabs    = document.getElementById('typeTabs');
+const meshOptions = document.getElementById('meshOptions');
 
 typeTabs.addEventListener('click', e => {
   const btn = e.target.closest('.type-btn');
@@ -334,9 +345,12 @@ typeTabs.addEventListener('click', e => {
   typeTabs.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   state.type = btn.dataset.type;
-  // Direction is only meaningful for linear gradients — grey out grid
+  // Direction only meaningful for linear
   directionGrid.style.opacity = state.type === 'linear' ? '1' : '0.35';
   directionGrid.style.pointerEvents = state.type === 'linear' ? '' : 'none';
+  // Chaos only meaningful for mesh
+  meshOptions.style.opacity = state.type === 'mesh' ? '1' : '0.35';
+  meshOptions.style.pointerEvents = state.type === 'mesh' ? '' : 'none';
   renderPreview();
 });
 
@@ -401,6 +415,23 @@ grainSlider.addEventListener('input', () => {
 });
 
 /* ============================================================
+   Chaos slider (mesh only)
+   ============================================================ */
+const chaosSlider = document.getElementById('chaosSlider');
+const chaosValue  = document.getElementById('chaosValue');
+
+chaosSlider.style.setProperty('--fill', '50%');
+
+chaosSlider.addEventListener('input', () => {
+  state.meshChaos = Number(chaosSlider.value);
+  const pct = `${state.meshChaos}%`;
+  chaosValue.textContent = pct;
+  chaosSlider.setAttribute('aria-valuetext', pct);
+  chaosSlider.style.setProperty('--fill', pct);
+  renderPreview();
+});
+
+/* ============================================================
    Glow controls
    ============================================================ */
 const glowToggle      = document.getElementById('glowToggle');
@@ -442,17 +473,8 @@ glowIntensityEl.style.setProperty('--fill', '70%');
 function buildCanvasGradient(ctx, w, h) {
   const stops = state.stops;
   const n = stops.length;
-  let grad;
-
-  if (state.type === 'linear') {
-    const [x0r, y0r, x1r, y1r] = CANVAS_DIRS[state.direction];
-    grad = ctx.createLinearGradient(x0r * w, y0r * h, x1r * w, y1r * h);
-  } else if (state.type === 'radial') {
-    grad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) / 2);
-  } else {
-    grad = ctx.createConicGradient(0, w / 2, h / 2);
-  }
-
+  const [x0r, y0r, x1r, y1r] = CANVAS_DIRS[state.direction];
+  const grad = ctx.createLinearGradient(x0r * w, y0r * h, x1r * w, y1r * h);
   stops.forEach((color, i) => grad.addColorStop(i / (n - 1), color));
   return grad;
 }
@@ -635,8 +657,12 @@ function init() {
 }
 
 generateBtn.addEventListener('click', () => {
-  state.stops = smartRandom();
-  if (state.type === 'mesh') randomMeshPositions();
+  if (state.type === 'mesh') {
+    state.stops = smartRandomMesh(); // 4–5 harmonious colors
+    randomMeshPositions();
+  } else {
+    state.stops = smartRandom();
+  }
   renderPreview();
   if (typeof renderColorStops === 'function') renderColorStops();
 });

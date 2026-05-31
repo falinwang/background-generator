@@ -44,9 +44,18 @@
         <div class="control-label">Type</div>
         <div class="type-tabs" id="typeTabs">
           <button class="type-btn active" data-type="linear">Linear</button>
-          <button class="type-btn" data-type="radial">Radial</button>
-          <button class="type-btn" data-type="conic">Conic</button>
           <button class="type-btn" data-type="mesh">Mesh</button>
+        </div>
+      </section>
+
+      <section class="control-group" id="meshOptions" style="opacity:0.35;pointer-events:none;transition:opacity 300ms ease-out">
+        <div class="control-label">
+          Chaos
+          <span class="grain-value" id="chaosValue">50%</span>
+        </div>
+        <div class="slider-well">
+          <input type="range" id="chaosSlider" min="0" max="100" value="50"
+            aria-label="Mesh chaos factor" aria-valuetext="50%" />
         </div>
       </section>
 
