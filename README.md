@@ -1,39 +1,41 @@
 # Personal Brand Kit Generator
 
-A browser-based design studio that generates gradient brand assets for LinkedIn, Instagram, X/Twitter, and personal websites — all exported as a single ZIP.
+[Try the live demo](https://falinwang.github.io/background-generator/)
 
-## Features
+A browser-based design studio for generating gradient brand assets for LinkedIn, Instagram, X/Twitter, and personal websites—exported together as a reusable brand kit.
 
-- **Randomize-first UX** — one click generates a harmonious gradient using HSL colour theory
-- **Full brand kit export** — 10 platform-sized PNGs, a ready-to-use `gradient.css`, and a `brand.md` AI prompt file
-- **Customize drawer** — colour stops (2–4), 8 directions, Linear/Radial/Conic types, grain/noise slider, 12 curated presets
-- **Neumorphic design** — cool-grey `#E0E5EC` surface with dual-shadow depth system
-- **No build step** — vanilla HTML/CSS/JS, open `index.html` directly
+## What it does
 
-## Exported Assets
+1. Generates a harmonious gradient starting point
+2. Lets you refine colors, direction, gradient type, and grain
+3. Exports platform-ready images, CSS, and an AI-ready brand prompt in one ZIP
+
+## Highlights
+
+- **Randomize-first workflow** using HSL color relationships
+- **10 platform-sized PNG assets** for social profiles and websites
+- **Flexible controls** for 2–4 color stops, 8 directions, gradient types, and grain
+- **12 curated presets**
+- **No build step** — runs directly in the browser
+
+## Exported assets
 
 | Platform | Files |
 |---|---|
-| LinkedIn | `banner-1584x396.png`, `profile-ring-800x800.png` |
-| Instagram | `story-1080x1920.png`, `post-1080x1080.png`, `profile-ring-800x800.png` |
-| X / Twitter | `header-1500x500.png`, `profile-ring-400x400.png` |
-| Website | `hero-1920x1080.png`, `gradient.css` |
-| All | `brand.md` — AI-ready brand prompt for Claude, ChatGPT, Midjourney |
-
-## Usage
-
-```bash
-open index.html
-```
-
-1. Click **✦ Generate New Gradient** to get a harmonious starting point
-2. Click **✎ Customize** to fine-tune colours, direction, type, and grain
-3. Click **Export Brand Kit ↓** to download `my-brand-kit.zip`
+| LinkedIn | Banner and profile ring |
+| Instagram | Story, post, and profile ring |
+| X / Twitter | Header and profile ring |
+| Website | Hero image and `gradient.css` |
+| Brand handoff | `brand.md` prompt file |
 
 ## Tech
 
-- Vanilla HTML / CSS / JS
-- [JSZip](https://stuk.github.io/jszip/) — ZIP assembly
-- [FileSaver.js](https://github.com/eligrey/FileSaver.js/) — download trigger
-- Canvas 2D API — native-resolution rendering
-- Google Fonts — Plus Jakarta Sans, DM Sans
+- Vanilla HTML, CSS, and JavaScript
+- Canvas 2D API
+- [JSZip](https://stuk.github.io/jszip/)
+- [FileSaver.js](https://github.com/eligrey/FileSaver.js/)
+- Plus Jakarta Sans and DM Sans
+
+## Run locally
+
+Open `index.html` in a browser. No installation or build step is required.
